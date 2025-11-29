@@ -1,102 +1,113 @@
 const express = require('express');
-const cors=require('cors');
-const app = express()
-const port = process.env.PORT || 3000;
+const cors = require('cors');
+const app = express();
+const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
- 
 
-require('dotenv').config() 
+require('dotenv').config();
 const uri = `mongodb+srv://${process.env.db_user}:${process.env.db_pass}@cluster0.jh9c8vh.mongodb.net/?appName=Cluster0`;
-
 
 app.use(cors());
 app.use(express.json());
 
-//mongodb user and password
-//  user:petdb
-//pass:fBaPuu5dTwkdR64a
-
-//create the mongodb client 
-
+// MongoDB client
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
 });
 
 async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    try {
+        // Connect client to DB
+        await client.connect();
 
-    //create the database
+        // Create DB
+        const db = client.db("pawMartDB");
 
-   const db = client.db("pawMartDB");
+        // Collections
+        const listingsCollection = db.collection("listings");
+        const ordersCollection = db.collection("orders");
 
-   //in this database make two collection one for listing and another for the order
+        // ************ ALL APIs ************ //
 
-const listingsCollection = db.collection("listings");
-const ordersCollection = db.collection("orders");
+        // -------------------------------------------- //
+        // LISTINGS APIs
+        // -------------------------------------------- //
 
-//************add all the API here *********************//
+        // POST — Add Listing
+        app.post("/listings", async (req, res) => {
+            const newListing = req.body;
+            const result = await listingsCollection.insertOne(newListing);
+            res.send(result);
+        });
 
-//post API for the listing
+        // GET — All Listings
+        app.get("/listings", async (req, res) => {
+            const result = await listingsCollection.find().toArray();
+            res.send(result);
+        });
 
-app.post("/listings", async (req, res) => {
-    const newListing = req.body;
-    const result = await listingsCollection.insertOne(newListing);
-    res.send(result);
-});
+        // GET — Listings by User Email (My Listings)
+        app.get("/listings/user", async (req, res) => {
+            const email = req.query.email;
+            const result = await listingsCollection.find({ email }).toArray();
+            res.send(result);
+        });
 
-//get all the listings 
+        // GET — Listings by Category
+        app.get("/listings/category/:category", async (req, res) => {
+            const category = req.params.category;
+            const result = await listingsCollection.find({ category }).toArray();
+            res.send(result);
+        });
 
-app.get("/listings", async (req, res) => {
-    const result = await listingsCollection.find().toArray();
-    res.send(result);
-});
+        // GET — Listing by ID (it has to be at last)
+        app.get("/listings/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await listingsCollection.findOne(query);
+            res.send(result);
+        });
 
-// get the listing by the id
+        // -------------------------------------------- //
+        // ORDERS APIs
+        // -------------------------------------------- //
 
-app.get("/listings/:id", async (req, res) => {
-    const id = req.params.id;
-    const query={ _id: new ObjectId(id) };
-    const result = await listingsCollection.findOne(query);
-    res.send(result);
-});
+        // POST — Add Order
+        app.post("/orders", async (req, res) => {
+            const newOrder = req.body;
+            const result = await ordersCollection.insertOne(newOrder);
+            res.send(result);
+        });
 
-// get the listing by the catagory
+        // GET — Orders by User Email (My Orders)
+        app.get("/orders/user", async (req, res) => {
+            const email = req.query.email;
+            const result = await ordersCollection.find({ email }).toArray();
+            res.send(result);
+        });
 
-app.get("/listings/category/:category", async (req, res) => {
-    const category = req.params.category;
-    const result = await listingsCollection.find({ category }).toArray();
-    res.send(result);
-});
+        // -------------------------------------------- //
 
-//post API for the order
+        // DB Ping
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. Connected to MongoDB!");
 
-app.post("/orders", async (req, res) => {
-    const newOrder = req.body;
-    const result = await ordersCollection.insertOne(newOrder);
-    res.send(result);
-});
-
-
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-   
-  }
+    } finally {
+        // Keep connection open
+    }
 }
 run().catch(console.dir);
 
+// Root Route
 app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+    res.send('Hello World!')
+});
 
+// Start Server
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+    console.log(`Server running on port ${port}`);
+});
