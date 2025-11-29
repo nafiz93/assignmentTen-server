@@ -66,6 +66,14 @@ app.get("/listings/:id", async (req, res) => {
     res.send(result);
 });
 
+// get the listing by the catagory
+
+app.get("/listings/category/:category", async (req, res) => {
+    const category = req.params.category;
+    const result = await listingsCollection.find({ category }).toArray();
+    res.send(result);
+});
+
 //post API for the order
 
 app.post("/orders", async (req, res) => {
