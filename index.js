@@ -87,6 +87,20 @@ app.patch("/listings/:id", async (req, res) => {
     res.send(result);
 });
 
+//delete my list
+
+// DELETE listing by ID
+app.delete("/listings/:id", async (req, res) => {
+    const id = req.params.id;
+
+    const query = { _id: new ObjectId(id) };
+
+    const result = await listingsCollection.deleteOne(query);
+
+    res.send(result);
+});
+
+
 
         // -------------------------------------------- //
         // ORDERS APIs
