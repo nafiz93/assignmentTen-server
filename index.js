@@ -72,6 +72,22 @@ async function run() {
             res.send(result);
         });
 
+        //update the liting by the id
+
+    
+app.patch("/listings/:id", async (req, res) => {
+    const id = req.params.id;
+    const updatedData = req.body;
+
+    const result = await listingsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
+    );
+
+    res.send(result);
+});
+
+
         // -------------------------------------------- //
         // ORDERS APIs
         // -------------------------------------------- //
