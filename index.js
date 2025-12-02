@@ -46,7 +46,8 @@ async function run() {
 
         // GET — All Listings
         app.get("/listings", async (req, res) => {
-            const result = await listingsCollection.find().toArray();
+            const cursor = listingsCollection.find().sort({data:-1}).limit(6);
+            const result=await cursor.toArray();
             res.send(result);
         });
 
